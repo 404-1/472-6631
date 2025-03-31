@@ -1,0 +1,7 @@
+﻿  proj prog.cpp
+  timer.cpp
+  vision.cpp
+  Generating Code...
+image_transfer.lib(image_transfer.obj) : warning LNK4099: PDB '' was not found with 'image_transfer.lib(image_transfer.obj)' or at ''; linking object as if no debug info
+image_transfer.lib(Video_IO.obj) : warning LNK4099: PDB '' was not found with 'image_transfer.lib(Video_IO.obj)' or at ''; linking object as if no debug info
+  program.vcxproj -> D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Class\vision_part1\vision_part1\vision_example1_bmp_load_save\Debug\program.exe
