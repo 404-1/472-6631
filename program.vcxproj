@@ -14,7 +14,7 @@
     <SccProjectName />
     <SccLocalPath />
     <ProjectGuid>{7E56BCE6-5C39-441D-9CAC-2739075FA2BC}</ProjectGuid>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -136,9 +136,12 @@
     <Library Include="strmbasd.lib" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="proj prog.cpp" />
+    <ClCompile Include="program.cpp" />
+    <ClCompile Include="robot.cpp" />
+    <ClCompile Include="shared_memory.cpp" />
     <ClCompile Include="timer.cpp" />
     <ClCompile Include="vision.cpp" />
+    <ClCompile Include="vision_simulation.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

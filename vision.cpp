@@ -252,14 +252,16 @@ int convolution(image &a, image &b, int *k, double s)
 		pb[size-i-1] = pb[size-i-1-width]; // top
 	}
 	for(i=0,j=0;i<height;i++,j+=width) {
-		pb[j] = pb[j+1]; // right
-		pb[size-j-1] = pb[size-j-2]; // left
+		pb[j] = pb[j+1]; // left
+		pb[size-j-1] = pb[size-j-2]; // right
 	}
-	pb[0] = pb[width+1]; // bottom left corner
 	
-	pb[width-1] = pb[width-1+width-1]; // top right corner
-	pb[size-width] = pb[size-width-width+1]; // bottom left corner
-	pb[size-1] = pb[size-1-width-1]; // bottom right corner
+	// the corner calculations below are redundant
+	// -- the copies above basically copy the corners indirectly
+	pb[0] = pb[width+1]; // bottom left corner
+	pb[width-1] = pb[width-1+width-1]; // bottom right corner
+	pb[size-width] = pb[size-width-width+1]; // top left corner
+	pb[size-1] = pb[size-1-width-1]; // top right corner
 
 	return 0;
 }
