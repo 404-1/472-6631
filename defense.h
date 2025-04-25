@@ -6,22 +6,26 @@
 
 //Point2f struct for storing 2D coordinates
 struct Point2f {
-    float x, y;
+    float x;
+    float y;
 
-    Point2f() : x(0), y(0) {} //default constructor
+    Point2f() : x(0), y(0) {}
+    Point2f(float _x, float _y) : x(_x), y(_y) {}
 
-    Point2f(float xVal, float yVal) : x(xVal), y(yVal) {} //constructor with x and y values
-
-    Point2f operator-(const Point2f& other) const {//subtraction operator for easy vector calculations
-        return Point2f(x - other.x, y - other.y);
-    }
-
-    Point2f operator+(const Point2f& other) const { //addition operator
+    Point2f operator+(const Point2f& other) const {
         return Point2f(x + other.x, y + other.y);
     }
 
-    Point2f operator*(float scalar) const { //scalar multiplication
+    Point2f operator-(const Point2f& other) const {
+        return Point2f(x - other.x, y - other.y);
+    }
+
+    Point2f operator*(float scalar) const {
         return Point2f(x * scalar, y * scalar);
+    }
+
+    float distanceTo(const Point2f& other) const {
+        return sqrt((x - other.x) * (x - other.x) + (y - other.y) * (y - other.y));
     }
 };
 
