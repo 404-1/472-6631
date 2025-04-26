@@ -22,8 +22,58 @@ using namespace std;
 
 extern robot_system S1;
 
+class Item {
+
+public:
+
+	int label;
+	int ic, jc, area;
+	double R, G, B;
+
+	Item(int label, int ic, int jc, int area, double R, double G, double B);
+
+
+};
+
+void features(image& a, image& rgb, image& label, int n_labels, int label_number[], double ic[], double jc[], double area[],
+	double R_ave[], double G_ave[], double B_ave[]);
+
+//image a is the greyscaled and manipulated image (filtered, etc), rgb is the orig. image, label is the label image. 
+//each of these images holds valuable info that the features function can use...
+
+void build_black_mask(image& rgb, image& mask_black, image& temp_grey);
+
+void remove_small_areas(image& grey, image& label, double count[], int min_area);
+
+void build_color_mask(image& rgb, image& color_mask, image& temp_grey);
+
+void combine_masks(image& mask, image& color_mask, image& black_mask);
+
+void set_robot_centroids(int& gx, int& gy, int& rx, int& ry, int& ox, int& oy, int& bx, int& by, Item* items[], int nlabels);
+
+
 int main()
 {
+	
+	image temp_grey1, temp_grey2, rgb, black_mask, original, color_mask, mask; // declare some image structures
+	image label;
+	int cam_number;
+	int R, G, B, nlabels;
+
+	const int maxlabels = 50;
+	double ic[maxlabels + 1];
+	double jc[maxlabels + 1];
+	double area[maxlabels + 1];
+	double R_ave[maxlabels + 1];
+	double G_ave[maxlabels + 1];
+	double B_ave[maxlabels + 1];
+	int label_number[maxlabels + 1];
+
+	int gx, gy, rx, ry, ox, oy, bx, by;
+
+	Item* items[maxlabels + 1]; //array of pointers to item objects
+	
+	
 	double x0, y0, theta0, max_speed, opponent_max_speed;
 	int pw_l, pw_r, pw_laser, laser;
 	double light, light_gradient, light_dir, image_noise;
@@ -72,7 +122,7 @@ int main()
 	alpha_max = 3.14159/2; // max range of laser / gripper (rad)
 	
 	// number of robot (1 - no opponent, 2 - with opponent, 3 - not implemented yet)
-	n_robot = 1;
+	n_robot = 2;
 	
 	cout << "\npress space key to begin program.";
 	pause();
@@ -161,7 +211,6 @@ int main()
 	// in addition, you can set the robot inputs to move it around
 	// the image and fire the laser.
 	
-	image rgb;
 	int height, width;
 
 	// note that the vision simulation library currently
@@ -173,8 +222,44 @@ int main()
 	rgb.width = width;
 	rgb.height = height;
 
+	original.type = RGB_IMAGE;
+	original.width = width;
+	original.height = height;
+
+	// set the type and size of the images
+	black_mask.type = GREY_IMAGE;
+	black_mask.width = width;
+	black_mask.height = height;
+
+	color_mask.type = GREY_IMAGE;
+	color_mask.width = width;
+	color_mask.height = height;
+
+	temp_grey1.type = GREY_IMAGE;
+	temp_grey1.width = width;
+	temp_grey1.height = height;
+
+	temp_grey2.type = GREY_IMAGE;
+	temp_grey2.width = width;
+	temp_grey2.height = height;
+
+	label.type = LABEL_IMAGE;
+	label.width = width;
+	label.height = height;
+
+	mask.type = GREY_IMAGE;
+	mask.width = width;
+	mask.height = height;
+
 	// allocate memory for the images
+	allocate_image(temp_grey1);
+	allocate_image(temp_grey2);
+	allocate_image(label);
 	allocate_image(rgb);
+	allocate_image(black_mask);
+	allocate_image(original);
+	allocate_image(color_mask);
+	allocate_image(mask);
 
 	// measure initial clock time
 	tc0 = high_resolution_time(); 
@@ -182,28 +267,102 @@ int main()
 	while(1) {
 		
 		// simulates the robots and acquires the image from simulation
-		acquire_image_sim(rgb);
+	acquire_image_sim(original);
 
-		tc = high_resolution_time() - tc0;
+	copy(original, rgb); 
 
-		// fire laser
-		if(tc > 1) laser = 1;
+	build_black_mask(rgb, black_mask, temp_grey1); 
 		
-		if(tc > 9) laser_o = 1;
+	// label the objects in a binary image
+	// labels go from 1 to nlabels
+	label_image(black_mask,label,nlabels);
 
-		// turn off the lasers so we can fire it again later
-		if(tc > 10) { 
-			laser = 0;
-			laser_o = 0;
-		}
+	features(black_mask, original, label, nlabels, label_number, ic, jc, area, R_ave, G_ave, B_ave);
+
+	int min_area = 2000; 
+
+	remove_small_areas(black_mask, label, area, min_area); 
+	
+	build_color_mask(original, color_mask, temp_grey1); 
+
+	copy(color_mask, rgb); 
+
+	combine_masks(mask, color_mask, black_mask); 
+
+	copy(mask, rgb); 
+	
+	//view_rgb_image(rgb);
+	
+	
+	label_image(mask, label, nlabels);
+
+	features(mask, original, label, nlabels, label_number, ic, jc, area, R_ave, G_ave, B_ave);
+
+
+	for (int i = 1; i <= nlabels; i++) {
+
+		items[i] = new Item(label_number[i], ic[i], jc[i], area[i], R_ave[i], G_ave[i], B_ave[i]);
+	}
+	
+	set_robot_centroids(gx, gy, rx, ry, ox, oy, bx, by, items, nlabels); 
+
+	//if (nlabels > 6) {
+	//	view_rgb_image(rgb);
+	//	pause();
+	//}
+
+	/*
+	cout << "\n gx:" << gx; 
+	cout << "\n gy:" << gy;
+	cout << "\n rx:" << rx;
+	cout << "\n ry:" << ry;
+	cout << "\n ox:" << ox;
+	cout << "\n oy:" << oy;
+	cout << "\n bx" << bx;
+	cout << "\n by:" << by;
+	*/
+
+
+	//centroid checks for the labels
+	
+
+	for(int k=1;k<=nlabels;k++) { //LOOP FOR TESTING
+
+		// compute the centroid of the last object
 		
-		// fire laser at tc = 14 s
-		if(tc > 14) {
-			laser = 1;
-			
-			// turn laser angle alpha at the same time
-			pw_laser = 1000;
-		}
+		//cout << "\ncentroid: ic = " << ic[k] << " , jc = " << jc[k];
+		//cout << "\narea: " << area[k]; 
+		//cout << "\nR_ave: " << R_ave[k]; 
+		//cout << "\nG_ave: " << G_ave[k];
+		//cout << "\nB_ave: " << B_ave[k];
+		//copy(mask, rgb);
+		// mark the centroid point on the image
+		
+		
+		R = 255; G = 0; B = 255;
+		draw_point_rgb(original,(int)ic[k], (int)jc[k], R, G, B);
+
+		
+		
+		// convert to RGB image format
+		//view_rgb_image(rgb);
+		//cout << "\nimage after a centroid is marked, label: "<<k;
+		//pause();
+
+	}
+	
+
+
+
+
+
+		
+
+
+
+
+
+
 
 		// change the inputs to move the robot around
 		// or change some additional parameters (lighting, etc.)
@@ -226,14 +385,22 @@ int main()
 		set_opponent_inputs(pw_l_o, pw_r_o, pw_laser_o, laser_o, 
 					opponent_max_speed);
 
-		view_rgb_image(rgb);
+		view_rgb_image(original);
 
 		// don't need to simulate too fast
 		Sleep(10); // 100 fps max
 	}
 
 	// free the image memory before the program completes
+	free_image(original);
+	free_image(temp_grey1);
+	free_image(temp_grey2);
+	free_image(label);
 	free_image(rgb);
+	free_image(mask);
+	free_image(black_mask);
+	free_image(color_mask);
+
 
 	deactivate_vision();
 	
@@ -242,4 +409,283 @@ int main()
 	cout << "\ndone.\n";
 
 	return 0;
+}
+
+
+
+
+
+void set_robot_centroids(int& gx, int& gy, int& rx, int& ry, int& ox, int& oy, int& bx, int& by, Item* items[], int nlabels) {
+
+	for (int i = 1; i <= nlabels; i++) {
+		Item* it = items[i];
+		int max_area = 1000; 
+
+		if (items[i]->area > max_area) continue; 
+
+
+		// green marker
+		if (it->R < 100 && it->G > 170 && it->B < 150) {
+			gx = it->ic;
+			gy = it->jc;
+		}
+		// red marker
+		else if (it->R > 200 && it->G < 110 && it->B < 100) {
+			rx = it->ic;
+			ry = it->jc;
+		}
+		// orange marker
+		else if (it->R > 200 && it->G > 100 && it->B < 150) {
+			ox = it->ic;
+			oy = it->jc;
+		}
+		// blue marker
+		else if (it->R < 80 && it->G < 170 && it->B >200) {
+			bx = it->ic;
+			by = it->jc;
+		}
+
+
+
+	}
+
+
+}
+
+void combine_masks(image& mask, image& color_mask, image& black_mask) {
+
+	int W = color_mask.width;
+	int H = color_mask.height;
+	int N = W * H;
+
+	for (int i = 0; i < N; i++) {
+
+		if (color_mask.pdata[i] == 255 || black_mask.pdata[i] == 255)
+			mask.pdata[i] = 255;
+
+		else
+			mask.pdata[i] = 0;
+	}
+
+}
+
+void build_color_mask(image& rgb, image& color_mask, image& temp_grey) {
+
+
+	int W = rgb.width;
+	int H = rgb.height;
+	int N = W * H;
+
+	ibyte* prgb = rgb.pdata;   // length = 3*N
+	ibyte* pm = color_mask.pdata; // length = N
+
+	for (int i = 0; i < N; i++, pm++) {
+		int b = prgb[3 * i + 0];
+		int g = prgb[3 * i + 1];
+		int r = prgb[3 * i + 2];
+
+		// orange test
+		bool Orange = (r > 200 && g > 100 && b < 150);
+
+		// blue test
+		bool Blue = (r < 80 && g < 170 && b > 200);
+
+		bool Red = (r > 200 && g < 110 && b < 100);
+
+		bool Green = (r < 100 && g > 170 && b < 150);
+
+		if (Orange || Blue || Red || Green) {
+			*pm = 255;
+		}
+
+		else(*pm = 0);
+
+
+	}
+
+	dialate(color_mask,temp_grey); 
+	copy(temp_grey, color_mask); 
+
+	dialate(color_mask, temp_grey); 
+	copy(temp_grey,color_mask); 
+	
+	dialate(color_mask, temp_grey);
+	copy(temp_grey, color_mask);
+
+	erode(color_mask, temp_grey);
+	copy(temp_grey, color_mask);
+
+	erode(color_mask, temp_grey);
+	copy(temp_grey, color_mask);
+
+	erode(color_mask, temp_grey);
+	copy(temp_grey, color_mask);
+	
+	//copy(color_mask, rgb); 
+	//view_rgb_image(rgb); 
+	//pause(); 
+
+}
+
+void features(image& grey, image& rgb, image& label, int n_labels, int label_number[], double ic[], double jc[], double area[],
+	double R_ave[], double G_ave[], double B_ave[]) {
+
+	int width = grey.width;
+	int height = grey.height;
+
+	ibyte* p_rgb, * p0_rgb;
+	i2byte* p_label;  // LABEL_IMAGE type (pixel values are 0 to 65535) (2 bit int)
+
+	p0_rgb = rgb.pdata; //start of image 'rgb' image data
+	p_label = (i2byte*)label.pdata; //casting to i2byte*, we can use pixel number to read from p_label data the label value (array of 16 byte values)
+
+	int pixel_number, label_id;
+
+	double* sumR = new double[n_labels + 1] {0};
+	double* sumG = new double[n_labels + 1] {0};
+	double* sumB = new double[n_labels + 1] {0};
+	double* count = new double[n_labels + 1] {0};
+
+	for (int j = 0; j < height; j++) {
+
+		for (int i = 0; i < width; i++) {
+
+			pixel_number = i + width * j;
+
+			p_rgb = p0_rgb + 3 * pixel_number; //pointer to the kth pixel. each pixel has 3 bytes of rgb data. 
+
+			label_id = p_label[pixel_number]; //label_id corresponds to the integer label given to the pixel the loop is on  
+			//cout << label_id; 
+			if (label_id > 0 && label_id <= n_labels) {
+
+				sumB[label_id] += *(p_rgb + 0);
+				sumG[label_id] += *(p_rgb + 1);
+				sumR[label_id] += *(p_rgb + 2);
+				count[label_id] += 1.0;
+				label_number[label_id] = label_id;
+			}
+		}
+	}
+
+	for (int i = 1; i <= n_labels; ++i) {
+		if (count[i] > 0.0) {
+			centroid(grey, label, i, ic[i], jc[i]);
+			area[i] = count[i];
+			R_ave[i] = sumR[i] / count[i];
+			G_ave[i] = sumG[i] / count[i];
+			B_ave[i] = sumB[i] / count[i];
+		}
+		else {
+			ic[i] = jc[i] = area[i] = 0.0;
+			R_ave[i] = G_ave[i] = B_ave[i] = 0.0;
+		}
+	}
+
+	delete[] sumR;
+	delete[] sumG;
+	delete[] sumB;
+	delete[] count;
+}
+
+
+void build_black_mask(image& rgb, image& black_mask, image& temp_grey) {
+
+
+	//  RGB to greyscale
+	copy(rgb, temp_grey);
+
+	copy(temp_grey, rgb);    // convert to RGB image format
+	//view_rgb_image(rgb);
+	
+
+	//scaling
+
+	scale(temp_grey, black_mask);
+	copy(black_mask, temp_grey);
+
+	copy(temp_grey, rgb);    // convert to RGB image format
+	//view_rgb_image(rgb);
+	
+
+
+	//filtering
+
+	lowpass_filter(temp_grey, black_mask);
+	copy(black_mask, temp_grey);
+
+	copy(temp_grey, rgb);    // convert to RGB image format
+	//view_rgb_image(rgb);
+	
+
+	//threshold
+
+	const int DARK_THRESH = 70;  // change as needed
+	// bright (>=DARK_THRESH) -> 255, dark (<DARK_THRESH) -> 0
+	threshold(temp_grey, black_mask, DARK_THRESH);
+	copy(black_mask, temp_grey);
+
+	copy(temp_grey, rgb); // convert to RGB image format
+	//view_rgb_image(rgb);
+	
+
+	// invert the image
+	invert(temp_grey, black_mask);
+	copy(black_mask, temp_grey);
+
+	copy(temp_grey, rgb);    // convert to RGB image format
+	//view_rgb_image(rgb);
+	
+	//erode
+
+	erode(temp_grey, black_mask);
+	copy(black_mask, temp_grey);
+
+	// peform one more erosion to make sure there aren't many
+	// small objects
+	erode(temp_grey, black_mask);
+	copy(black_mask, temp_grey);
+
+
+	copy(temp_grey, rgb);    // convert to RGB image format
+	//view_rgb_image(rgb);
+	
+	// perform a dialation function to fill in 
+	// and grow the objects
+	dialate(temp_grey, black_mask);
+	copy(black_mask, temp_grey);
+
+	copy(temp_grey, rgb);    // convert to RGB image format
+	//view_rgb_image(rgb);
+	
+}
+
+void remove_small_areas(image& grey, image& label, double area[], int min_area) { //removes labels and turns pixels to black
+
+	int W = grey.width;
+	int H = grey.height;
+	int N = W * H;
+	int label_id;
+
+	i2byte* l = (i2byte*)label.pdata;
+	ibyte* g = grey.pdata;
+
+	for (int n = 0; n < N; n++) { //dont need to do p = p0 + 3 * pixel_number since grey image has 1 byte per pixel
+
+		label_id = l[n];
+
+		if (area[label_id] < min_area) {
+			g[n] = 0;
+			l[n] = 0;
+		}
+	}
+}
+
+Item::Item(int label, int ic, int jc, int area, double R, double G, double B) {
+	this->label = label;
+	this->ic = ic;
+	this->jc = jc;
+	this->area = area;
+	this->R = R;
+	this->G = G;
+	this->B = B;
 }

@@ -1,1 +1,3 @@
 D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Class\vision_simulator_version_2.53\vision_simulator_version_2.53_manual_opponent\Debug\program.exe
+D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631_2\Debug\program.exe
+D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631\Debug\program.exe
