@@ -1,9 +1,14 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "D:\\Users\\School\\Concordia University\\Winter 2025\\MECH 6631 - INDUSTRIAL AUTOMATION\\Project\\472-6631_2\\",
+  "WorkspaceRootPath": "D:\\Users\\School\\Concordia University\\Winter 2025\\MECH 6631 - INDUSTRIAL AUTOMATION\\Project\\472-6631\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Users\\School\\Concordia University\\Winter 2025\\MECH 6631 - INDUSTRIAL AUTOMATION\\Project\\472-6631\\program2.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{7E56BCE6-5C39-441D-9CAC-2739075FA2BC}|program.vcxproj|D:\\Users\\School\\Concordia University\\Winter 2025\\MECH 6631 - INDUSTRIAL AUTOMATION\\Project\\472-6631\\program.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{7E56BCE6-5C39-441D-9CAC-2739075FA2BC}|program.vcxproj|solutionrelative:program.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Users\\School\\Concordia University\\Winter 2025\\MECH 6631 - INDUSTRIAL AUTOMATION\\Project\\472-6631\\program2.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:program2.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -18,11 +23,24 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "program.cpp",
+              "DocumentMoniker": "D:\\Users\\School\\Concordia University\\Winter 2025\\MECH 6631 - INDUSTRIAL AUTOMATION\\Project\\472-6631\\program.cpp",
+              "RelativeDocumentMoniker": "program.cpp",
+              "ToolTip": "D:\\Users\\School\\Concordia University\\Winter 2025\\MECH 6631 - INDUSTRIAL AUTOMATION\\Project\\472-6631\\program.cpp",
+              "RelativeToolTip": "program.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-04-26T07:41:08.537Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
               "Title": "program2.cpp",
               "DocumentMoniker": "D:\\Users\\School\\Concordia University\\Winter 2025\\MECH 6631 - INDUSTRIAL AUTOMATION\\Project\\472-6631\\program2.cpp",
-              "RelativeDocumentMoniker": "..\\472-6631\\program2.cpp",
+              "RelativeDocumentMoniker": "program2.cpp",
               "ToolTip": "D:\\Users\\School\\Concordia University\\Winter 2025\\MECH 6631 - INDUSTRIAL AUTOMATION\\Project\\472-6631\\program2.cpp",
-              "RelativeToolTip": "..\\472-6631\\program2.cpp",
+              "RelativeToolTip": "program2.cpp",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-04-25T19:14:27.502Z"
             }
