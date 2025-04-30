@@ -308,7 +308,7 @@ int main()
 		// compute the centroid of the last object
 		
 		//cout << "\ncentroid: ic = " << ic[k] << " , jc = " << jc[k];
-		cout << "\narea: " << area[k]; 
+		//cout << "\narea: " << area[k]; 
 		//cout << "\nR_ave: " << R_ave[k]; 
 		//cout << "\nG_ave: " << G_ave[k];
 		//cout << "\nB_ave: " << B_ave[k];
