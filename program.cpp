@@ -328,9 +328,8 @@ int main()
 		//pause();
 
 	}
-	cout << "\n\n" << obs_r[1] << "\n" << obs_r[2]
-		; 
-	pause(); 
+	//cout << "\n\n" << obs_r[1] << "\n" << obs_r[2]; 
+	//pause(); 
 
 
 
