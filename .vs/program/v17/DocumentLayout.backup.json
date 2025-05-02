@@ -1,0 +1,86 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\Users\\School\\Concordia University\\Winter 2025\\MECH 6631 - INDUSTRIAL AUTOMATION\\Project\\472-6631\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{7E56BCE6-5C39-441D-9CAC-2739075FA2BC}|program.vcxproj|D:\\Users\\School\\Concordia University\\Winter 2025\\MECH 6631 - INDUSTRIAL AUTOMATION\\Project\\472-6631\\program.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{7E56BCE6-5C39-441D-9CAC-2739075FA2BC}|program.vcxproj|solutionrelative:program.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7E56BCE6-5C39-441D-9CAC-2739075FA2BC}|program.vcxproj|D:\\Users\\School\\Concordia University\\Winter 2025\\MECH 6631 - INDUSTRIAL AUTOMATION\\Project\\472-6631\\attack_new_2.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{7E56BCE6-5C39-441D-9CAC-2739075FA2BC}|program.vcxproj|solutionrelative:attack_new_2.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Users\\School\\Concordia University\\Winter 2025\\MECH 6631 - INDUSTRIAL AUTOMATION\\Project\\attack_main[1].cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7E56BCE6-5C39-441D-9CAC-2739075FA2BC}|program.vcxproj|D:\\Users\\School\\Concordia University\\Winter 2025\\MECH 6631 - INDUSTRIAL AUTOMATION\\Project\\472-6631\\vision2.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{7E56BCE6-5C39-441D-9CAC-2739075FA2BC}|program.vcxproj|solutionrelative:vision2.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "attack_main[1].cpp",
+              "DocumentMoniker": "D:\\Users\\School\\Concordia University\\Winter 2025\\MECH 6631 - INDUSTRIAL AUTOMATION\\Project\\attack_main[1].cpp",
+              "RelativeDocumentMoniker": "..\\attack_main[1].cpp",
+              "ToolTip": "D:\\Users\\School\\Concordia University\\Winter 2025\\MECH 6631 - INDUSTRIAL AUTOMATION\\Project\\attack_main[1].cpp",
+              "RelativeToolTip": "..\\attack_main[1].cpp",
+              "ViewState": "AgIAAF0AAACAZmZmZmYkwGoAAAATAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-05-01T20:01:19.653Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "program.cpp",
+              "DocumentMoniker": "D:\\Users\\School\\Concordia University\\Winter 2025\\MECH 6631 - INDUSTRIAL AUTOMATION\\Project\\472-6631\\program.cpp",
+              "RelativeDocumentMoniker": "program.cpp",
+              "ToolTip": "D:\\Users\\School\\Concordia University\\Winter 2025\\MECH 6631 - INDUSTRIAL AUTOMATION\\Project\\472-6631\\program.cpp*",
+              "RelativeToolTip": "program.cpp*",
+              "ViewState": "AgIAAKMAAAAAIDMzMzPjv7EAAAAPAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-04-26T07:41:08.537Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "attack_new_2.cpp",
+              "DocumentMoniker": "D:\\Users\\School\\Concordia University\\Winter 2025\\MECH 6631 - INDUSTRIAL AUTOMATION\\Project\\472-6631\\attack_new_2.cpp",
+              "RelativeDocumentMoniker": "attack_new_2.cpp",
+              "ToolTip": "D:\\Users\\School\\Concordia University\\Winter 2025\\MECH 6631 - INDUSTRIAL AUTOMATION\\Project\\472-6631\\attack_new_2.cpp",
+              "RelativeToolTip": "attack_new_2.cpp",
+              "ViewState": "AgIAAFsAAABAMzMzMzMrwGMAAAAeAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-04-30T21:46:46.385Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "vision2.cpp",
+              "DocumentMoniker": "D:\\Users\\School\\Concordia University\\Winter 2025\\MECH 6631 - INDUSTRIAL AUTOMATION\\Project\\472-6631\\vision2.cpp",
+              "RelativeDocumentMoniker": "vision2.cpp",
+              "ToolTip": "D:\\Users\\School\\Concordia University\\Winter 2025\\MECH 6631 - INDUSTRIAL AUTOMATION\\Project\\472-6631\\vision2.cpp",
+              "RelativeToolTip": "vision2.cpp",
+              "ViewState": "AgIAACYAAABgZmZmZmYiwEMAAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-04-30T21:10:33.723Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

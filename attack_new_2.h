@@ -1,41 +1,44 @@
-//this function gets the angle between 2 centroids to the positive x-axis
-//it also gets the distance between the 2 centroids
+
+// Calculate distance and angle between two points
 int angle_distance(double x1, double y1, double x2, double y2, double& distance, double& angle);
 
-//this function checks if th distance from the obstacle projection on the path to the obstacle is less than the obstacle radius and extra margin
-int projection_blocked(double xs, double ys, double xor, double yor, double xo, double yo, double obs_rad, double& clear_angle);
+// Check if obstacle blocks the projection path
+int projection_blocked(double xs, double ys, double xor_, double yor, double xo, double yo, double obs_rad, bool& clear_angle);
 
-//checks if self is close to edge
+// Detect if robot is near the image edges
 int edge_detection(double width1, double height1, double th, double xs_f, double ys_f, bool& boundary_detected);
 
-//rotates the robot to the right (clockwise)
+// Robot movement commands
 int clockwise(double& pw_l_new, double& pw_r_new);
-
-//rotates the robot to the left (counterclockwise)
 int counterclockwise(double& pw_l_new, double& pw_r_new);
-
-//moves the robot to straight forward
 int move_straight(double& pw_l_new, double& pw_r_new);
 
-//decides when to rotate the robot to align with opponent for laser shooting
+// Rotate to face the opponent
 int rotate_to_opponent(double angle_s, double angle_r, bool& aligned, double& pw_l_new, double& pw_r_new);
 
-//decides where to rotate the robot to align with opponent for laser shooting
+// Rotate toward center of field
 int rotate_to_center(double width, double height, double xs, double ys, double angle_s, double& pw_l_new, double& pw_r_new);
 
-//this function sets the goal target to shoot. It will be half the distance
-//set dist_ratio from 0 to 1. It is the ration when the goal point would be between the robots
+// Set goal target (between self and opponent)
 int goal(double xs_f, double ys_f, double xor_f, double yor_f, double ratio, double& goal_x, double& goal_y, double& dist_goal, double& angle_goal);
 
-//decides when to rotate the robot to align with goal
-int rotate_to_goal(double goal_x, double goal_y, double xs_f, double ys_f, double angle_s, double pw_l, double pw_r, double& pw_l_new, double& pw_r_new);
+// Rotate to face goal
+int rotate_to_goal(double goal_x, double goal_y, double xs_f, double ys_f, double angle_s, int pw_l, int pw_r, int& pw_l_new, int& pw_r_new);
 
-// this function sets a detour goal point if obstacle exists between the robots.
-// go to this point when there is an obstacle. In main loop, if statement if obstacle in path
-// set an obstacle margin/radius obs_rad is the radius of obs, and margin is the theshold
-int detour(double xo, double yo, double obs_rad, double& detour_x, double& detour_y);
+// Set detour point around obstacle
+int detour(double xo, double yo, double obs_rad, double margin, double angle_r, double& detour_x, double& detour_y);
 
-//decides where to rotate the robot to align with detour
-int rotate_to_detour(double detour_x, double detour_y, double xs_f, double ys_f, double angle_s, double pw_l, double pw_r, double& pw_l_new, double& pw_r_new);
+// Rotate to face detour
+int rotate_to_detour(double detour_x, double detour_y, double xs_f, double ys_f, double angle_s, int pw_l, int pw_r, int& pw_l_new, int& pw_r_new);
 
-int line_aligned(double xs, double ys, double xor, double yor, double& aligned);
+// Check if robots are aligned along a line
+int line_aligned(double xs, double ys, double xor_, double yor, bool& aligned);
+
+// Attack function (master control for robot attack)
+void attack(
+    int gx, int gy, int rx, int ry,
+    int ox, int oy, int bx, int by,
+    double width1, double height1,
+    double& pw_l, double& pw_r, double& laser
+);
+

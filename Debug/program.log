@@ -1,21 +1,15 @@
 ﻿  program.cpp
-D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631\program.cpp(304,60): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631\program.cpp(304,51): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631\program.cpp(304,44): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631\program.cpp(84,9): warning C4101: 'tc': unreferenced local variable
-D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631\program.cpp(60,6): warning C4101: 'cam_number': unreferenced local variable
-  robot.cpp
-  shared_memory.cpp
-  timer.cpp
-  vision.cpp
-  vision_simulation.cpp
-D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631\vision_simulation.cpp(270,18): warning C4101: 't_laser_o': unreferenced local variable
-D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631\vision_simulation.cpp(270,9): warning C4101: 't_laser': unreferenced local variable
-D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631\vision_simulation.cpp(698,11): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631\vision_simulation.cpp(699,11): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631\vision_simulation.cpp(700,11): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631\vision_simulation.cpp(514,12): warning C4101: 'k': unreferenced local variable
-  Generating Code...
-image_transfer.lib(image_transfer.obj) : warning LNK4099: PDB '' was not found with 'image_transfer.lib(image_transfer.obj)' or at ''; linking object as if no debug info
-image_transfer.lib(Video_IO.obj) : warning LNK4099: PDB '' was not found with 'image_transfer.lib(Video_IO.obj)' or at ''; linking object as if no debug info
+D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631\program.cpp(327,35): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631\program.cpp(327,25): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631\program.cpp(327,19): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631\program.cpp(327,13): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631\program.cpp(440,61): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631\program.cpp(440,52): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631\program.cpp(440,45): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631\program.cpp(520,36): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631\program.cpp(520,26): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631\program.cpp(520,20): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631\program.cpp(520,14): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631\program.cpp(219,9): warning C4101: 'tc': unreferenced local variable
+D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631\program.cpp(193,6): warning C4101: 'cam_number': unreferenced local variable
   program.vcxproj -> D:\Users\School\Concordia University\Winter 2025\MECH 6631 - INDUSTRIAL AUTOMATION\Project\472-6631\Debug\program.exe
