@@ -1,4 +1,4 @@
-
+﻿
 #include <cstdio>
 #include <iostream>
 #include <fstream>
@@ -24,199 +24,304 @@ using namespace std;
 
 #include "attack_new_2.h"
 
-void attack(
-	int gx, int gy, int rx, int ry,
-	int ox, int oy, int bx, int by,
-	double width1, double height1,
-	double& pw_l, double& pw_r, double& laser, bool& laser_fire,
-	double obs_ic[], double obs_jc[], double obs_r[], int obs_count
-) {
-	bool aligned = false, clear_dist = false, clear_angle_front = false, clear_angle_back = false, clear = false;
-	bool obs_to_right = false, obs_to_left = false, obs_close = false;
-	bool boundary_detected = false;
-	double margin = 110;
+extern robot_system S1;
 
-	double dist_s, angle_s;
-	double dist_or, angle_or;
-	double dist_fr, dist_br, angle_r_f, angle_r_b;
-	double dist_obs, angle_obs;
+void getAngle(double x1, double y1, double x2, double y2, double& angle) {
+	double dx = x1 - x2;
+	double dy = y1 - y2;
+	angle = atan2(dy, dx) * (180.0 / 3.1415);
+	if (angle < 0.0) angle += 360.0;
+	if (angle >= 360.0) angle -= 360;
+}
 
-	// Core distances and angles
-	angle_distance(gx, gy, rx, ry, dist_s, angle_s); // self robot
-	angle_distance(ox, oy, bx, by, dist_or, angle_or); // opponent robot
-	angle_distance(ox, oy, gx, gy, dist_fr, angle_r_f); // distance between robots (front)
-	angle_distance(gx, gy, bx, by, dist_br, angle_r_b); // distance between robots (back)
+void getDistance(double x1, double y1, double x2, double y2, double& distance) {
+	double dx = x1 - x2;
+	double dy = y1 - y2;
+	distance = sqrt(dx * dx + dy * dy);
+} 
 
-	int obs_cooldown = 0;
+void getRobotPosition(double x1, double y1, double x2, double y2, double& position_x, double & position_y) {
 
-	// Find closest obstacle
-	for (int i = 1; i <= obs_count; i++) {
-		angle_distance(obs_ic[i], obs_jc[i], gx, gy, dist_obs, angle_obs);
+	position_x = (x1 + x2) / 2; 
+	position_y = (y1 + y2) / 2; 
+}
 
-		//checks if obstacle is closer than target
-		if (dist_obs <= dist_br) clear_dist = false; //maybe blocked. more checks
-		else clear = true; //clear for sure since its after the target
+// returns true if the line segment (x1,y1)->(x2,y2) end points (x1,y1), (x2,y2) have LOS with each other (line segment doesnt hit any obstacles)
+bool hasLineOfSight(double x1, double y1, double x2, double y2, const double obs_ic[], const double obs_jc[], const double obs_r[], int obs_count) {
 
-		//check if obstacle is cutting the linear path
-		if (!clear_dist) {
-			//check projection so if its cuts the linear path from robots
-			projection_blocked(gx, gy, ox, oy, obs_ic[i], obs_jc[i], obs_r[i], clear_angle_front); // front
-			projection_blocked(gx, gy, bx, by, obs_ic[i], obs_jc[i], obs_r[i], clear_angle_back); // back
+	// vector from start to end of the segment
+	double ax = x2 - x1;
+	double ay = y2 - y1;
+	double segLen2 = ax * ax + ay * ay;  // squared segment length
 
-			//checks if its blocked and give a detour point away from obstacle
-			if (!clear_angle_front || !clear_angle_back) {
-				clear = false;
-			}
-			else if (clear_angle_front && clear_angle_back) {
-				clear = true;
-			}
-		}
+	for (int k = 1; k <= obs_count; k++) {
+		double cx = obs_ic[k];
+		double cy = obs_jc[k];
+		double r = obs_r[k]+15; //ADD 15 PIXEL BUFFER TO THE OBSTACLE RADIUS TO ACCOUNT FOR ROBOT THICKNESS
 
-		////check if obstacle is close to robot
-		//if (!clear && (dist_obs <= (obs_r[i] + margin))) obs_close = true;
-		//if (!clear && (dist_obs > (obs_r[i] + margin))) {
-		//	obs_close = false;
-		//	obs_to_right = false;
-		//	obs_to_left = false;
-		//}
+		// vector from segment start to circle center
+		double bx = cx - x1;
+		double by = cy - y1;
 
-		//if (obs_close) {
-		//	if (angle_s <= angle_obs) { //should go ccw at 90 degree around obstacle
-		//		obs_to_right = false;
-		//		obs_to_left = true;
-		//	}
+		// project center onto the line (standard dot product projection)
+		//t=0 corresponds to (x1,y1), t=1 to (x2,y2)
+		double t = (bx * ax + by * ay) / segLen2;
 
-		//	else { //should go cw at 90 degree around obstacle
-		//		obs_to_right = true;
-		//		obs_to_left = false;
-		//	}
-		//	if (clear) {
-		//		obs_to_right = false;
-		//		obs_to_left = false;
-		//	}
-		if (dist_obs <= (obs_r[i] + margin) && abs(angle_s - angle_obs) < 10) {
-			obs_close = true;
-			pw_l = 1200;
-			pw_r = 1400;
-			//clockwise(pw_l, pw_r);
-		}
-			/*else if (dist_obs <= (obs_r[i] + margin)) {
-				move_straight(pw_l, pw_r);
-			}*/
-			/*else if (dist_obs >= (obs_r[i] + margin + 1000)) {
-				obs_close = false;
-			}*/
-		}
+		// were looking for point thats closest to obstacle buyt on the vector (x1,y1)->(x2,y2) .
+		// ... the closest point when t>1 is the end point... when t<1 its the start
+		if (t < 0.0) t = 0.0;
+		else if (t > 1.0) t = 1.0;
 
-		// Check boundary
-		edge_detection(width1, height1, 100, gx, gy, boundary_detected);
+		// the closest point on segment to circle center is then
+		double closestX = x1 + t * ax;
+		double closestY = y1 + t * ay;
 
-		// Check alignment with opponent
-		if (abs(angle_s - abs(angle_r_b - angle_r_f)) <= 40.0)
-			aligned = true;
+		// squared distance from circle center to that closest point
+		double dist2 = (cx - closestX) * (cx - closestX) + (cy - closestY) * (cy - closestY);
 
-		//if (obs_to_right) counterclockwise(pw_l, pw_r);
-		////and move forward
-
-		//if (obs_to_left) clockwise(pw_l, pw_r);
-		////and move forward
-
-		// Check projection from robot to opponent: is it blocked?
-		//clear = false;
-		//for (int i = 1; i <= obs_count; i++) {
-		//	//bool clear_angle = false;
-
-		//	projection_blocked(gx, gy, ox, oy, obs_ic[i], obs_jc[i], obs_r[i], clear_angle_front); // front
-		//	projection_blocked(gx, gy, bx, by, obs_ic[i], obs_jc[i], obs_r[i], clear_angle_back); // back
-		//	if (!clear_angle_front || !clear_angle_back) {
-		//		clear = false;
-		//	}
-		//	else if (clear_angle_front && clear_angle_back) {
-		//		clear = true;
-		//	}
-		//}
-
-		// Action Decisions
-
-		if (boundary_detected) {
-			//rotate_to_center(width1, height1, gx, gy, angle_s, pw_l, pw_r);
-			rotate_to_opponent(angle_s, angle_r_f, aligned, pw_l, pw_r);
-			laser = 0;
-			return;
-		}
-
-		/// If too close to obstacle then slow clockwise rotation
-		/*if (dist_obs <= (obs_r + margin)) {
-			pw_l = 1550;
-			pw_r = 1450;
-			laser = 0;
-			return;
-		}*/
-
-		/*if (obs_cooldown > 0) {
-			obs_cooldown--;
-			if (dist_r >= 150) return;
-		}*/
-
-		// If too close to opponent then stop
-		if (dist_br < 80 || dist_fr < 60) {
-			pw_l = 1500;
-			pw_r = 1500;
-			return;
-		}
-		/*if (dist_fr < 60) {
-			pw_l = 2000;
-			pw_r = 1000;
-			return;
-		}*/
-
-		// If all clear and aligned, move straight
-		/*if (aligned && clear && !obs_close) {
-			move_straight(pw_l, pw_r);
-		}
-		else if (!aligned && !obs_close){
-			rotate_to_opponent(angle_s, angle_r_f, aligned, pw_l, pw_r);
-		}*/
-
-		if (dist_obs <= margin && clear) {
-			/*pw_l = 1500;
-			pw_r = 1500;*/
-
-			if (angle_s < angle_obs) {
-				// Obstacle is to the right � rotate left
-				pw_l = 1600;
-				pw_r = 1400;
-			}
-			else {
-				// Obstacle is to the left � rotate right
-				pw_l = 1400;
-				pw_r = 1600;
-			}
-			return;
-		}
-
-		if (clear && !obs_close) {
-			rotate_to_opponent(angle_s, angle_r_b, aligned, pw_l, pw_r);
-		}
-
-		rotate_to_opponent(angle_s, angle_r_f, aligned, pw_l, pw_r);
-	
-		// Fire laser
-		if (aligned && clear && !laser_fire) {
-			laser = 1;
-			laser_fire = true;
-		}
-		/*else if (laser_fire) {
-			pw_l = 1500;
-			pw_r = 1500;
-		}*/
-		else {
-			laser = 0;
+		// if that distance <= r^2 then the segment intersects the circle
+		if (dist2 <= r * r) {
+			 
+			return false;
 		}
 	}
-// end attack
 
-extern robot_system S1;
+	// no intersections means the poitns have LOS w eachother return true for success
+	return true;
+
+}
+
+
+//checks if point is in an obstacle
+bool isInObstacle(double x, double y, double obs_ic[], double obs_jc[], double obs_r[],int obs_count)
+{
+	for (int k = 1; k <= obs_count; k++) {
+		double dx = x - obs_ic[k];
+		double dy = y - obs_jc[k];
+		double R = obs_r[k] +15; //ADD 15 PIXEL BUFFER TO THE OBSTACLE RADIUS TO ACCOUNT FOR ROBOT THICKNESS
+
+
+		if (dx * dx + dy * dy <= R*R) {
+			return true;
+		}
+	}
+	return false;
+}
+
+
+bool findVantagePoint(
+	int self_x,
+	int self_y,
+	int opp_x,
+	int opp_y,
+	double obs_ic[],
+	double obs_jc[],
+	double obs_r[],
+	int obs_count,
+	int& vantage_x,
+	int& vantage_y) {
+
+	double rmax = 200.0; //max search radius 
+	double dr = 3.0; // radius divisions (pixels)
+	double ds = 3.0; // arc-length divisions (pixels)
+	double s, smax, theta;
+	int i, j; 
+	for (double r = 1.0; r <= rmax; r += dr) {
+		smax = 2 * 3.1416 * r; // maximum arc length
+		for (s = 0; s <= smax; s += ds) {
+			theta = s / r; // s = r*theta
+			i =(int) (self_x + r * cos(theta));
+			j = (int)(self_y + r * sin(theta));
+
+			if (i < 0 || i >= 640 || j < 0 || j >= 480)
+				continue;
+
+			if (isInObstacle(i, j, obs_ic, obs_jc, obs_r, obs_count))
+				continue;
+
+			if (hasLineOfSight(i, j, opp_x, opp_y, obs_ic, obs_jc, obs_r, obs_count)) {
+				vantage_x = i;
+				vantage_y = j;
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+
+void pointturnToAngle(double currentDeg, double targetDeg, double& pw_l, double& pw_r) {
+
+	double diff = fmod(targetDeg - currentDeg + 360.0, 360.0);
+	cout << "\n" << diff;
+	if (diff < 2 || diff>358) { //within 2 degrees
+		// already on target
+		pw_l = pw_r = 1500;
+		 
+	}
+	
+	else if (diff <= 180.0) {
+		// shortest path is CCW
+		pw_l = 2000;
+		pw_r = 2000;
+	}
+
+	else {
+		// shortest path is CW
+		pw_l = 1000;
+		pw_r = 1000;
+	}
+}
+
+void goTo(int self_x, //goes to point in straight line
+	int self_y,
+	double currentDeg,
+	int target_x,
+	int target_y,
+	double& pw_l,
+	double& pw_r) {
+
+	//cout << "\n" << target_x << "\t" << target_y;
+
+	double dist;
+	getDistance(target_x, target_y, self_x, self_y, dist);
+	
+	//cout << "\n" << self_y; 
+	
+	if (dist < 5) { //if within 5 pixels stop moving
+		pw_l = pw_r = 1500;  
+		return;
+	}
+	
+	double targetDeg; 
+	getAngle( target_x, target_y, self_x, self_y, targetDeg);
+
+	double diff = fmod(targetDeg - currentDeg + 360.0, 360.0);
+	
+
+	if (diff < 15 || diff>345) { //if within 15 degrees move forward
+		
+		pw_l = 1000;
+		pw_r = 2000;
+		
+	}
+
+	else if (diff <= 180.0) {
+		// shortest path is CCW
+		pw_l = 2000;
+		pw_r = 2000;
+		
+	}
+
+	else {
+		// shortest path is CW
+		pw_l = 1000;
+		pw_r = 1000;
+		
+	}
+} 
+
+bool findDetourPoint(int self_x, int self_y,
+	int goal_x, int goal_y,
+	double obs_ic[], double obs_jc[], double obs_r[],
+	int obs_count,
+	int& detour_x, int& detour_y)
+{
+	
+	
+	hasLineOfSight(self_x, self_y,goal_x, goal_y,obs_ic, obs_jc, obs_r,obs_count); // must call this func to get the blocking obstacle id for later. 
+	
+	
+	// how long of a detour (pixl)
+	double DETOUR_DIST = 200.0;
+	// angle increments (rad) 
+	double DETOUR_ANGLE = 5.0 * 3.14159 / 180.0;  // 5degs
+	// max sweep of 90 deg
+	double MAX_ANGLE = 3.14159 / 2;
+
+	//  start at the angle where the robo is going 
+	double starting_angle = atan2(goal_y - self_y, goal_x - self_x);
+
+	// try offsets in 10 deg increments up to 90
+	for (double a = DETOUR_ANGLE; a <= MAX_ANGLE; a += DETOUR_ANGLE) {
+		
+		for (int sign = -1; sign <= 1; sign += 2) { //check +ve and -ve angles
+		
+			double θ = starting_angle + sign * a;
+			int  dx = (int)(self_x + DETOUR_DIST * cos(θ));
+			int  dy = (int)(self_y + DETOUR_DIST * sin(θ));
+			
+			// if out of screen forget it
+			if (dx < 0 || dx >= 640 || dy < 0 || dy >= 480)
+				continue;
+			
+			// cant be inside obstacle
+			if (isInObstacle(dx, dy, obs_ic, obs_jc, obs_r, obs_count))
+				continue;
+			
+			//robo must have LOS with the detour point AND
+			//detour point must have LOS with the goal
+
+			
+			if (hasLineOfSight(self_x, self_y, dx, dy, obs_ic, obs_jc, obs_r, obs_count)
+				&& hasLineOfSight(dx, dy, goal_x, goal_y, obs_ic, obs_jc, obs_r, obs_count)){
+			 
+				detour_x = dx; //if both are satisified then set the detour point and return true to say we found a detour
+				detour_y = dy; 
+				
+				return true;
+
+				
+				
+			}
+		
+		
+		}
+	}
+	return false; //detour point wasnt found
+}
+
+void goTo_WithAvoidance(int  self_x,
+	int    self_y,
+	double currentDeg,
+	int    goal_x,
+	int    goal_y,
+	double& pw_l,
+	double& pw_r,
+	double obs_ic[], double obs_jc[], double obs_r[],
+	int    obs_count)
+{
+	int blocking_obs_id_dummy; 
+		
+	// If base point has LOS with the goal then go straigth there
+	if (hasLineOfSight(self_x, self_y, goal_x, goal_y, obs_ic, obs_jc, obs_r, obs_count))
+	{
+		
+		goTo(self_x, self_y, currentDeg, goal_x, goal_y, pw_l, pw_r);
+		
+		return;
+	}
+
+	int det_x, det_y;
+	if (findDetourPoint(self_x, self_y, goal_x, goal_y, obs_ic, obs_jc, obs_r, obs_count, det_x, det_y))
+	{
+		
+		// we found a detour point (det_x,det_y) that robot can see from base point and the detour point can see the goal
+		goTo(self_x, self_y, currentDeg, det_x, det_y, pw_l, pw_r);
+		
+		return;
+	}
+
+	
+	cout << "\ncant find detour and doesnt have LOS"; 
+	
+	
+}
+
+
+//check_to_fire(); 
+
 
 int main()
 {
@@ -238,6 +343,9 @@ int main()
 	int label_number[maxlabels + 1];
 
 	int gx, gy, rx, ry, ox, oy, bx, by;
+	double angle_self, angle_opp, x_position_self, x_position_opp, y_position_self, y_position_opp;;
+	int vantage_x=1000, vantage_y=1000; //initial vantage point position of 1k, 1k ensures vantage point is calculated on first loop
+	double vantage_to_attacker;
 
 	Item* items[maxlabels + 1]; //array of pointers to item objects
 
@@ -265,12 +373,12 @@ int main()
 	// number of obstacles
 	N_obs = 2;
 
-	x_obs[1] = 270; // pixels
+	x_obs[1] = 400; // pixels
 	y_obs[1] = 270; // pixels
 	size_obs[1] = 1.5; // scale factor 1.0 = 100% (not implemented yet)	
 
 	x_obs[2] = 135; // pixels
-	y_obs[2] = 135; // pixels
+	y_obs[2] = 205; // pixels
 	size_obs[2] = 1.0; // scale factor 1.0 = 100% (not implemented yet)	
 
 	// set robot model parameters ////////
@@ -333,7 +441,7 @@ int main()
 	set_robot_position(x0, y0, theta0);
 
 	// set opponent initial position (pixels) and angle (rad)
-	x0 = 150;
+	x0 = 400;
 	y0 = 375;
 	theta0 = 3.14159 / 4;
 	set_opponent_position(x0, y0, theta0);
@@ -341,8 +449,8 @@ int main()
 	// set initial inputs / on-line adjustable parameters /////////
 
 	// inputs
-	pw_l = 1250; // pulse width for left wheel servo (us)
-	pw_r = 2000; // pulse width for right wheel servo (us)
+	pw_l =1500; // pulse width for left wheel servo (us)
+	pw_r = 1500; // pulse width for right wheel servo (us)
 	pw_laser = 1500; // pulse width for laser servo (us)
 	laser = 0; // laser input (0 - off, 1 - fire)
 
@@ -362,8 +470,8 @@ int main()
 		max_speed, opponent_max_speed);
 
 	// opponent inputs
-	pw_l_o = 1300; // pulse width for left wheel servo (us)
-	pw_r_o = 1600; // pulse width for right wheel servo (us)
+	pw_l_o = 1500; // pulse width for left wheel servo (us)
+	pw_r_o = 1500; // pulse width for right wheel servo (us)
 	pw_laser_o = 1500; // pulse width for laser servo (us)
 	laser_o = 0; // laser input (0 - off, 1 - fire)
 
@@ -477,13 +585,41 @@ int main()
 
 		set_obstacle_centroids_and_radii(obs_ic, obs_jc, obs_r, items, nlabels, obs_count);
 
-		attack(gx, gy, rx, ry, ox, oy, bx, by, width1, height1, pw_l, pw_r, laser, laser_fire, obs_ic, obs_jc, obs_r, obs_count);
 
+		getAngle(gx, gy, rx, ry, angle_self);
+		getAngle(ox, oy, bx, by, angle_opp);
+		getRobotPosition(gx, gy, rx, ry, x_position_self, y_position_self);
+		getRobotPosition(ox, oy, bx, by, x_position_opp, y_position_opp);
 
-		//if (nlabels > 6) {
-		//	view_rgb_image(rgb);
-		//	pause();
-		//}
+		double selfToOppAngle;
+		getAngle( x_position_opp, y_position_opp,gx, gy, selfToOppAngle);
+
+		//pointturnToAngle(angle_self, selfToOppAngle, pw_l, pw_r); 
+
+		
+
+		
+		
+		getDistance(gx, gy, vantage_x, vantage_y, vantage_to_attacker); 
+
+		if (vantage_to_attacker > 10) {
+			cout <<vantage_to_attacker<<"\n";
+			findVantagePoint(gx, gy, x_position_opp, y_position_opp, obs_ic, obs_jc, obs_r, obs_count, vantage_x, vantage_y);
+			goTo_WithAvoidance(gx, gy, angle_self, vantage_x, vantage_y, pw_l, pw_r, obs_ic, obs_jc, obs_r, obs_count);
+		}
+		
+
+		//check_to_fire(); 
+
+		//goTo_WithAvoidance(gx, gy, angle_self, 370, 350, pw_l, pw_r, obs_ic, obs_jc, obs_r, obs_count);
+		//draw_point_rgb(original,  370, 350, 0, 0, 255);
+
+		
+
+		//cout << "\n\n" << vantage_x << "\n" << vantage_y;
+
+		// cout << "\n\n" << x_position_self<<"\n"<< y_position_self;
+
 
 		/*
 		cout << "\n gx:" << gx;
@@ -492,7 +628,7 @@ int main()
 		cout << "\n ry:" << ry;
 		cout << "\n ox:" << ox;
 		cout << "\n oy:" << oy;
-		cout << "\n bx" << bx;
+		cout << "\n bx" << bx; 
 		cout << "\n by:" << by;
 		*/
 
@@ -500,7 +636,7 @@ int main()
 		//centroid checks for the labels
 
 
-		for (int k = 1;k <= nlabels;k++) { //LOOP FOR TESTING
+		for (int k = 1; k <= nlabels; k++) { //LOOP FOR TESTING
 
 			// compute the centroid of the last object
 
@@ -515,6 +651,8 @@ int main()
 
 			R = 255; G = 0; B = 255;
 			draw_point_rgb(original, (int)ic[k], (int)jc[k], R, G, B);
+			draw_point_rgb(original, x_position_self, y_position_self, R, G, B);
+			draw_point_rgb(original, x_position_opp, y_position_opp, R, G, B);
 
 			//draw_point_rgb(original, obs_ic[2], obs_jc[2], R, G, B);
 
@@ -531,12 +669,14 @@ int main()
 
 
 
+		draw_point_rgb(original, vantage_x, vantage_y, 255, 255, 0);
+
+		//draw_point_rgb(original, 390 , 336, 255, 255, 0);
+		
 
 
 
-
-
-
+	
 
 			// change the inputs to move the robot around
 			// or change some additional parameters (lighting, etc.)
