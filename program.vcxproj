@@ -136,12 +136,18 @@
     <Library Include="strmbasd.lib" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="defense_modev6.cpp" />
     <ClCompile Include="program.cpp" />
     <ClCompile Include="robot.cpp" />
     <ClCompile Include="shared_memory.cpp" />
     <ClCompile Include="timer.cpp" />
     <ClCompile Include="vision.cpp" />
+    <ClCompile Include="vision2.cpp" />
     <ClCompile Include="vision_simulation.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="defense.h" />
+    <ClInclude Include="vision2.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
