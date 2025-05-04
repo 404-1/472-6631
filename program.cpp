@@ -24,96 +24,116 @@ using namespace std;
 
 #include "attack_new_2.h"
 
+//for attack global
+bool edge_recovery = false;
+int edge_counter = 0;
+bool obs_recovery = false;
+int obs_counter = 0;
+
 void attack(
 	int gx, int gy, int rx, int ry,
 	int ox, int oy, int bx, int by,
 	double width1, double height1,
-	double& pw_l, double& pw_r, double& laser, bool& laser_fire,
-	double obs_ic[], double obs_jc[], double obs_r[], int obs_count
-) {
+	int& pw_l, int& pw_r, int& laser, bool& laser_fire,
+	double obs_ic[], double obs_jc[], double obs_r[], int obs_count) 
+{
 	bool aligned = false, clear_dist = false, clear_angle_front = false, clear_angle_back = false, clear = false;
 	bool obs_to_right = false, obs_to_left = false, obs_close = false;
 	bool boundary_detected = false;
-	double margin = 110;
+	double margin = 100.0, robot_margine = 5.0;
 
 	double dist_s, angle_s;
 	double dist_or, angle_or;
-	double dist_fr, dist_br, angle_r_f, angle_r_b;
-	double dist_obs, angle_obs;
+	double dist_fr, dist_br, dist_cr, angle_r_f, angle_r_b, angle_r_c;
+	double dist_obs = 10000.0, angle_obs = 1000.0;
 
-	// Core distances and angles
-	angle_distance(gx, gy, rx, ry, dist_s, angle_s); // self robot
-	angle_distance(ox, oy, bx, by, dist_or, angle_or); // opponent robot
-	angle_distance(ox, oy, gx, gy, dist_fr, angle_r_f); // distance between robots (front)
-	angle_distance(gx, gy, bx, by, dist_br, angle_r_b); // distance between robots (back)
+	//Core distances and angles
+	//g is front of attack robot
+	//r is back of attack robot
+	//o is front of defensive robot
+	//b is back of defensive robot
+	//c is center of defense robot
+	
+	double cx = (ox + bx) / 2.0;
+	double cy = (oy + by) / 2.0;
 
-	int obs_cooldown = 0;
+	//gets all necessary angles and distances
+	angle_distance(gx, gy, rx, ry, dist_s, angle_s); //attack robot
+	angle_distance(ox, oy, bx, by, dist_or, angle_or); //defense robot
+	angle_distance(ox, oy, gx, gy, dist_fr, angle_r_f); //distance between robots (defense front to attack front)
+	angle_distance(bx, by, gx, gy, dist_br, angle_r_b); //distance between robots (defense back to attack front)
+	angle_distance(cx, cy, gx, gy, dist_cr, angle_r_c); //distance between robots (defense center to attack front)
 
-	// Find closest obstacle
+	//find closest obstacle and checks if the vision is clear from attack to defensive robots
+	//initialize for the for loop
+	double min_dist = 1000000000.0; //temporary minimum distance for the for loop
+	int imp_obs = -1; //index for the closest obstacle
+	int blocked_counter = 0; //number of temporary blocked for the for loop
+
 	for (int i = 1; i <= obs_count; i++) {
-		angle_distance(obs_ic[i], obs_jc[i], gx, gy, dist_obs, angle_obs);
+		double temp_dist, temp_angle; //temporary minimum distance for the for loop
+		bool clear_temp = true; //temporary clear for the for loop
+		angle_distance(obs_ic[i], obs_jc[i], gx, gy, temp_dist, temp_angle);
 
-		//checks if obstacle is closer than target
-		if (dist_obs <= dist_br) clear_dist = false; //maybe blocked. more checks
-		else clear = true; //clear for sure since its after the target
+		if (temp_dist < min_dist) {
+			min_dist = temp_dist; //updates the minimum distance to comapre with the other obstacles
+			dist_obs = temp_dist; //distance of the closest obstacle
+			angle_obs = temp_angle; //angle of the closest obstacle
+			imp_obs = i; //index of the closest obstacle
+		}
+
+		if (temp_dist <= dist_br) clear_dist = false; //maybe blocked. more checks
+		else clear_temp = true; //clear for sure since its after the target
 
 		//check if obstacle is cutting the linear path
 		if (!clear_dist) {
-			//check projection so if its cuts the linear path from robots
-			projection_blocked(gx, gy, ox, oy, obs_ic[i], obs_jc[i], obs_r[i], clear_angle_front); // front
-			projection_blocked(gx, gy, bx, by, obs_ic[i], obs_jc[i], obs_r[i], clear_angle_back); // back
+			//check projection so if its cuts the linear path from robots, then clear_angle is false
+			projection_blocked(gx, gy, ox, oy, obs_ic[i], obs_jc[i], obs_r[i], clear_angle_front); //front
+			projection_blocked(gx, gy, bx, by, obs_ic[i], obs_jc[i], obs_r[i], clear_angle_back); //back
 
-			//checks if its blocked and give a detour point away from obstacle
+			//checks if the path for attack is blocked
 			if (!clear_angle_front || !clear_angle_back) {
-				clear = false;
+				clear_temp = false;
 			}
 			else if (clear_angle_front && clear_angle_back) {
-				clear = true;
+				clear_temp = true;
 			}
 		}
 
-		////check if obstacle is close to robot
-		//if (!clear && (dist_obs <= (obs_r[i] + margin))) obs_close = true;
-		//if (!clear && (dist_obs > (obs_r[i] + margin))) {
-		//	obs_close = false;
-		//	obs_to_right = false;
-		//	obs_to_left = false;
-		//}
+		if (!clear_temp) blocked_counter++;
+	}
 
-		//if (obs_close) {
-		//	if (angle_s <= angle_obs) { //should go ccw at 90 degree around obstacle
-		//		obs_to_right = false;
-		//		obs_to_left = true;
-		//	}
+	if (blocked_counter > 0) clear = false; //blocked
+	if (blocked_counter == 0) clear = true; //clear
 
-		//	else { //should go cw at 90 degree around obstacle
-		//		obs_to_right = true;
-		//		obs_to_left = false;
-		//	}
-		//	if (clear) {
-		//		obs_to_right = false;
-		//		obs_to_left = false;
-		//	}
-		if (dist_obs <= (obs_r[i] + margin) && abs(angle_s - angle_obs) < 10) {
-			obs_close = true;
-			pw_l = 1200;
-			pw_r = 1400;
-			//clockwise(pw_l, pw_r);
+	//checks if the attack robot is aligned between the defensive robot centroids
+	if (angle_r_f <= 360.0 && angle_r_b <= 360.0) {
+		if (angle_r_f - angle_r_b <= 0.0) {
+			
+			if (angle_s >= angle_r_f - robot_margine && angle_s <= angle_r_b + robot_margine) aligned = true;
+			else aligned = false;
 		}
-			/*else if (dist_obs <= (obs_r[i] + margin)) {
-				move_straight(pw_l, pw_r);
-			}*/
-			/*else if (dist_obs >= (obs_r[i] + margin + 1000)) {
-				obs_close = false;
-			}*/
+		if (angle_r_f - angle_r_b > 0.0) {
+			if (angle_s <= angle_r_f + robot_margine && angle_s >= angle_r_b - robot_margine) aligned = true;
+			else aligned = false;
 		}
+	}
+	if (angle_r_f > 180.0 && angle_r_b < 180.0) {
+			if (angle_s <= angle_r_f + robot_margine && angle_s <= angle_r_b - robot_margine) aligned = true;
+			else aligned = false;
+	}
+	if (angle_r_f < 180.0 && angle_r_b > 180.0) {
+			if (angle_s <= angle_r_f + robot_margine && angle_s <= angle_r_b - robot_margine) aligned = true;
+			else aligned = false;
+	}
 
-		// Check boundary
-		edge_detection(width1, height1, 100, gx, gy, boundary_detected);
-
-		// Check alignment with opponent
-		if (abs(angle_s - abs(angle_r_b - angle_r_f)) <= 40.0)
-			aligned = true;
+	if (dist_obs <= (obs_r[imp_obs] + margin) && abs(angle_s - angle_obs) < 40) {
+		obs_close = true;
+	}
+	else obs_close = false;
+	
+	//checks boundary map if close to attack
+	edge_detection(width1, height1, dist_s + 10.0, gx, gy, boundary_detected);
 
 		//if (obs_to_right) counterclockwise(pw_l, pw_r);
 		////and move forward
@@ -121,98 +141,86 @@ void attack(
 		//if (obs_to_left) clockwise(pw_l, pw_r);
 		////and move forward
 
-		// Check projection from robot to opponent: is it blocked?
-		//clear = false;
-		//for (int i = 1; i <= obs_count; i++) {
-		//	//bool clear_angle = false;
 
-		//	projection_blocked(gx, gy, ox, oy, obs_ic[i], obs_jc[i], obs_r[i], clear_angle_front); // front
-		//	projection_blocked(gx, gy, bx, by, obs_ic[i], obs_jc[i], obs_r[i], clear_angle_back); // back
-		//	if (!clear_angle_front || !clear_angle_back) {
-		//		clear = false;
-		//	}
-		//	else if (clear_angle_front && clear_angle_back) {
-		//		clear = true;
-		//	}
-		//}
+	//Action and Decisions
+		//clear, aligned, obs_close
 
-		// Action Decisions
-
-		if (boundary_detected) {
-			//rotate_to_center(width1, height1, gx, gy, angle_s, pw_l, pw_r);
-			rotate_to_opponent(angle_s, angle_r_f, aligned, pw_l, pw_r);
-			laser = 0;
-			return;
-		}
-
-		/// If too close to obstacle then slow clockwise rotation
-		/*if (dist_obs <= (obs_r + margin)) {
-			pw_l = 1550;
-			pw_r = 1450;
-			laser = 0;
-			return;
-		}*/
-
-		/*if (obs_cooldown > 0) {
-			obs_cooldown--;
-			if (dist_r >= 150) return;
-		}*/
-
-		// If too close to opponent then stop
-		if (dist_br < 80 || dist_fr < 60) {
-			pw_l = 1500;
-			pw_r = 1500;
-			return;
-		}
-		/*if (dist_fr < 60) {
-			pw_l = 2000;
-			pw_r = 1000;
-			return;
-		}*/
+		//if its clear and aligned then shoot.
+		//if its clear but not aligned then rotate to opponent
+		//if its not clear then move around the obstacle until its clear
+		//if its obs is close then turn 90 degrees and move until its away
+		//if the attack is close to the edge of the map then rotate to center and move a bit
+		//if the atack is 
 
 		// If all clear and aligned, move straight
-		/*if (aligned && clear && !obs_close) {
+		if (aligned && clear && !obs_close) {
 			move_straight(pw_l, pw_r);
 		}
 		else if (!aligned && !obs_close){
-			rotate_to_opponent(angle_s, angle_r_f, aligned, pw_l, pw_r);
-		}*/
-
-		if (dist_obs <= margin && clear) {
-			/*pw_l = 1500;
-			pw_r = 1500;*/
-
-			if (angle_s < angle_obs) {
-				// Obstacle is to the right — rotate left
-				pw_l = 1600;
-				pw_r = 1400;
-			}
-			else {
-				// Obstacle is to the left — rotate right
-				pw_l = 1400;
-				pw_r = 1600;
-			}
-			return;
+			rotate_to_opponent(angle_s, angle_r_f, pw_l, pw_r);
 		}
 
 		if (clear && !obs_close) {
-			rotate_to_opponent(angle_s, angle_r_b, aligned, pw_l, pw_r);
+			rotate_to_opponent(angle_s, angle_r_b, pw_l, pw_r);
 		}
 
-		rotate_to_opponent(angle_s, angle_r_f, aligned, pw_l, pw_r);
-	
-		// Fire laser
-		if (aligned && clear && !laser_fire) {
+		rotate_to_opponent(angle_s, angle_r_f, pw_l, pw_r);
+		
+		// If too close to defensive then stop
+		//if ((dist_br < 50) || (dist_cr < 50) || (dist_fr < (dist_or + 50))) {
+			//pw_l = 1500;
+			//pw_r = 1500;
+		//}
+
+		//mode for obstacle close to attack robot to prevent collision
+		if (obs_close && !obs_recovery) {
+			obs_counter = 10; //amount of frames until the attack stop recovering from the edge
+			obs_recovery = true; //mode to enter recovery from edge
+		}
+		if (obs_recovery) {
+			if (angle_s <= angle_obs && angle_s >= angle_obs - 50) {
+				// Obstacle is to the left — rotate clockwise
+				clockwise(pw_l, pw_r);
+			}
+			else if (angle_s >= angle_obs && angle_s <= angle_obs + 50) {
+				// Obstacle is to the right — rotate ccw
+				counterclockwise(pw_l, pw_r);
+			}
+			else move_straight(pw_l, pw_r);
+
+			if (obs_counter == 0) {
+				obs_recovery = false; //exit recovery mode
+			}
+			else obs_counter--; //continue recovery mode
+		}
+
+		//mode for boudnery detection
+		if (boundary_detected && !edge_recovery) {
+			edge_counter = 30; //amount of frames until the attack stop recovering from the edge
+			edge_recovery = true; //mode to enter recovery from edge
+		}
+		if (edge_recovery) {
+			rotate_to_center(width1, height1, gx, gy, angle_s, pw_l, pw_r);
+
+			if (edge_counter == 0) {
+				edge_recovery = false; //exit recovery mode
+			}
+			else edge_counter--; //continue recovery mode
+		}
+		
+		if (aligned && clear && !laser_fire && (dist_br < 100 || dist_fr < 100)) {
 			laser = 1;
 			laser_fire = true;
 		}
-		/*else if (laser_fire) {
+		else if (laser_fire) {
 			pw_l = 1500;
 			pw_r = 1500;
-		}*/
+		}
 		else {
 			laser = 0;
 		}
+		cout << "aligned " << obs_close << endl;
+		//cout << "f " << angle_r_b << endl;
 	}
 // end attack
 
@@ -243,7 +251,7 @@ int main()
 
 
 	double x0, y0, theta0, max_speed, opponent_max_speed;
-	double pw_l, pw_r, pw_laser, laser;
+	int pw_l, pw_r, pw_laser, laser;
 	double light, light_gradient, light_dir, image_noise;
 	double width1, height1;
 	int N_obs, n_robot;
@@ -265,12 +273,12 @@ int main()
 	// number of obstacles
 	N_obs = 2;
 
-	x_obs[1] = 270; // pixels
-	y_obs[1] = 270; // pixels
-	size_obs[1] = 1.5; // scale factor 1.0 = 100% (not implemented yet)	
+	x_obs[1] = 135; // pixels
+	y_obs[1] = 135; // pixels
+	size_obs[1] = 2.0; // scale factor 1.0 = 100% (not implemented yet)	
 
-	x_obs[2] = 135; // pixels
-	y_obs[2] = 135; // pixels
+	x_obs[2] = 270; // pixels
+	y_obs[2] = 270; // pixels
 	size_obs[2] = 1.0; // scale factor 1.0 = 100% (not implemented yet)	
 
 	// set robot model parameters ////////
@@ -329,7 +337,7 @@ int main()
 	// set robot initial position (pixels) and angle (rad)
 	x0 = 470;
 	y0 = 170;
-	theta0 = 0;
+	theta0 = 100;
 	set_robot_position(x0, y0, theta0);
 
 	// set opponent initial position (pixels) and angle (rad)
