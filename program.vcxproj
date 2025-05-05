@@ -137,6 +137,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="attack_new_2.cpp" />
+    <ClCompile Include="attack_v3.cpp" />
     <ClCompile Include="program.cpp" />
     <ClCompile Include="robot.cpp" />
     <ClCompile Include="shared_memory.cpp" />
@@ -147,6 +148,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="attack_new_2.h" />
+    <ClInclude Include="attack_v3.h" />
     <ClInclude Include="vision2.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

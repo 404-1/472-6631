@@ -12,21 +12,37 @@ using namespace std;
 // include this header file for computer vision functions
 #include "vision.h"
 
-
 #include "vision2.h"
 
-void set_obstacle_centroids_and_radii(double obs_ic[], double  obs_yc[], double obs_r[], Item* items[], int nlabels, int& obs_count) {
+image rgb, color_mask, black_mask, mask, temp_grey1, temp_grey2, label;
+
+int OBSTACLE_RADIUS_TOLERANCE = 40; 
+
+const int maxlabels = 50;
+double ic[maxlabels + 1];
+double jc[maxlabels + 1];
+double area[maxlabels + 1];
+double R_ave[maxlabels + 1];
+double G_ave[maxlabels + 1];
+double B_ave[maxlabels + 1];
+int label_number[maxlabels + 1];
+
+Item* items[maxlabels + 1]; //array of pointers to item objects
+
+int nlabels;
+
+void set_obstacle_centroids_and_radii(double obs_ic[], double  obs_jc[], double obs_r[], Item* items[], int nlabels, int& obs_count) {
 
 	int min_area = 1000, count = 0;
 
-	for (int i = 1; i <= nlabels; ++i) {
+	for (int i = 1; i <= nlabels; i++) {
 		Item* it = items[i];
 
 		if (it->area > min_area) {
 			count++;
 			obs_ic[count] = it->ic;
-			obs_yc[count] = it->jc;
-			obs_r[count] = sqrt(it->area / 3.14159);
+			obs_jc[count] = it->jc;
+			obs_r[count] = sqrt(it->area / 3.14159)+ OBSTACLE_RADIUS_TOLERANCE;
 		}
 	}
 	obs_count = count;
@@ -241,19 +257,18 @@ void build_black_mask(image& rgb, image& black_mask, image& temp_grey) {
 	//threshold
 
 	const int DARK_THRESH = 70;  // change as needed
-	// bright (>=DARK_THRESH) -> 255, dark (<DARK_THRESH) -> 0
+	// bright (>=DARK_THRESH) = 255, dark (<DARK_THRESH) =0
 	threshold(temp_grey, black_mask, DARK_THRESH);
 	copy(black_mask, temp_grey);
 
 	//copy(temp_grey, rgb); 
 	//view_rgb_image(rgb);
 
-
 	// invert the image
 	invert(temp_grey, black_mask);
 	copy(black_mask, temp_grey);
 
-	//copy(temp_grey, rgb);    /
+	//copy(temp_grey, rgb);    
 	//view_rgb_image(rgb);
 
 	//erode
@@ -307,4 +322,101 @@ Item::Item(int label, int ic, int jc, int area, double R, double G, double B) {
 	this->R = R;
 	this->G = G;
 	this->B = B;
+}
+
+
+void run_vision(image original, int& gx, int& gy, int& rx, int& ry, int& ox, int& oy, int& bx,
+	int& by, double obs_ic[], double obs_jc[], double obs_r[], int& obs_count) {
+
+	copy(original, rgb);
+
+	build_black_mask(rgb, black_mask, temp_grey1);
+
+	label_image(black_mask, label, nlabels);
+
+	features(black_mask, original, label, nlabels, label_number, ic, jc, area, R_ave, G_ave, B_ave);
+
+	int min_area = 2000;
+
+	remove_small_areas(black_mask, label, area, min_area); //the only black items we need to keep are the obstacles 
+
+	build_color_mask(original, color_mask, temp_grey1);
+
+	combine_masks(mask, color_mask, black_mask);
+
+	label_image(mask, label, nlabels);
+
+	features(mask, original, label, nlabels, label_number, ic, jc, area, R_ave, G_ave, B_ave);
+
+	for (int i = 1; i <= nlabels; i++) {
+
+		items[i] = new Item(label_number[i], ic[i], jc[i], area[i], R_ave[i], G_ave[i], B_ave[i]);
+	}
+
+	set_robot_centroids(gx, gy, rx, ry, ox, oy, bx, by, items, nlabels);
+
+	set_obstacle_centroids_and_radii(obs_ic, obs_jc, obs_r, items, nlabels, obs_count);
+
+	reset_items(items, nlabels);
+
+}
+
+void init_vision() {
+	int height, width;
+
+	// note that the vision simulation library currently
+	// assumes an image size of 640x480
+	width = 640;
+	height = 480;
+
+	rgb.type = RGB_IMAGE;
+	rgb.width = width;
+	rgb.height = height;
+
+	// set the type and size of the images
+	black_mask.type = GREY_IMAGE;
+	black_mask.width = width;
+	black_mask.height = height;
+
+	color_mask.type = GREY_IMAGE;
+	color_mask.width = width;
+	color_mask.height = height;
+
+	temp_grey1.type = GREY_IMAGE;
+	temp_grey1.width = width;
+	temp_grey1.height = height;
+
+	temp_grey2.type = GREY_IMAGE;
+	temp_grey2.width = width;
+	temp_grey2.height = height;
+
+	label.type = LABEL_IMAGE;
+	label.width = width;
+	label.height = height;
+
+	mask.type = GREY_IMAGE;
+	mask.width = width;
+	mask.height = height;
+
+	// allocate memory for the images
+	allocate_image(temp_grey1);
+	allocate_image(temp_grey2);
+	allocate_image(label);
+	allocate_image(rgb);
+	allocate_image(black_mask);
+	allocate_image(color_mask);
+	allocate_image(mask);
+}
+
+
+void cleanup_vision() {
+	free_image(temp_grey1);
+	free_image(temp_grey2);
+	free_image(label);
+	free_image(rgb);
+	free_image(mask);
+	free_image(black_mask);
+	free_image(color_mask);
+
+
 }

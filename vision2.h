@@ -44,3 +44,12 @@ void set_robot_centroids(
 
 
 void set_obstacle_centroids_and_radii(double obs_ic[], double  obs_yc[], double obs_r[], Item* items[], int nlabels, int& obs_count); 
+
+void init_vision();
+
+
+
+void run_vision(image original, int& gx, int& gy, int& rx, int& ry, int& ox, int& oy, int& bx,
+    int& by, double obs_ic[], double obs_jc[], double obs_r[], int &obs_count); 
+
+void cleanup_vision();
